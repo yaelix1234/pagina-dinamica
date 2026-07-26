@@ -65,6 +65,21 @@ class PedidoSerializer(serializers.ModelSerializer):
     def validate_detalles(self, value):
         if not value:
             raise serializers.ValidationError('El pedido debe incluir al menos un producto.')
+
+        productos_vistos = {}
+        for detalle in value:
+            producto = detalle['producto']
+            cantidad = detalle['cantidad']
+            productos_vistos[producto.id] = productos_vistos.get(producto.id, 0) + cantidad
+
+        for producto_id, cantidad_total in productos_vistos.items():
+            producto = Producto.objects.get(id=producto_id)
+            if cantidad_total > producto.existencias:
+                raise serializers.ValidationError(
+                    f'No tienes suficiente inventario de "{producto.nombre}". '
+                    f'Revisa tus productos: disponible {producto.existencias}, solicitado {cantidad_total}.'
+                )
+
         return value
 
     @transaction.atomic
@@ -83,18 +98,31 @@ class PedidoSerializer(serializers.ModelSerializer):
             )
 
         pedido.calcular_total()
+
+        # Si el pedido se crea directamente en un estado que descuenta, aplica el descuento
+        pedido.aplicar_movimiento_inventario('pendiente', pedido.estado)
+
         return pedido
 
     @transaction.atomic
     def update(self, instance, validated_data):
         detalles_data = validated_data.pop('detalles', None)
+        estado_anterior = instance.estado
+        estado_nuevo = validated_data.get('estado', instance.estado)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
         if detalles_data is not None:
+            # Si ya había descontado inventario, primero regrésalo antes de reemplazar el detalle
+            if estado_anterior in instance.ESTADOS_QUE_DESCUENTAN:
+                for detalle_viejo in instance.detalles.all():
+                    detalle_viejo.producto.existencias += detalle_viejo.cantidad
+                    detalle_viejo.producto.save(update_fields=['existencias'])
+
             instance.detalles.all().delete()
+
             for detalle in detalles_data:
                 producto = detalle['producto']
                 cantidad = detalle['cantidad']
@@ -104,6 +132,20 @@ class PedidoSerializer(serializers.ModelSerializer):
                     cantidad=cantidad,
                     precio_unitario=producto.precio,
                 )
+
             instance.calcular_total()
 
+            # Si el nuevo estado descuenta, aplica el descuento con el detalle nuevo
+            if estado_nuevo in instance.ESTADOS_QUE_DESCUENTAN:
+                for detalle in instance.detalles.all():
+                    detalle.producto.existencias -= detalle.cantidad
+                    detalle.producto.save(update_fields=['existencias'])
+        else:
+            # Si no cambió el detalle, solo aplica el movimiento por cambio de estado
+            instance.aplicar_movimiento_inventario(estado_anterior, estado_nuevo)
+
         return instance
+
+class LoginSerializer(serializers.Serializer):
+    correo = serializers.EmailField()
+    password = serializers.CharField(write_only=True)

@@ -1,5 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.contrib.auth.hashers import make_password, check_password
+
+
+from django.contrib.auth.hashers import make_password, check_password
 
 
 class Usuario(models.Model):
@@ -16,6 +20,7 @@ class Usuario(models.Model):
 
     nombre = models.CharField(max_length=150)
     correo = models.EmailField(unique=True)
+    password = models.CharField(max_length=128, default='')
     cargo = models.CharField(max_length=20, choices=CARGO_CHOICES, default='empleado')
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='activo')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
@@ -26,6 +31,12 @@ class Usuario(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
 
 
 class Categoria(models.Model):
@@ -139,7 +150,27 @@ class Pedido(models.Model):
         self.total = total
         self.save(update_fields=['total'])
         return total
+    ESTADOS_QUE_DESCUENTAN = ['en_preparacion', 'listo', 'entregado']
 
+    def aplicar_movimiento_inventario(self, estado_anterior, estado_nuevo):
+        """
+        Ajusta el inventario según el cambio de estado:
+        - Al entrar a un estado que descuenta (y no venía de otro que ya descontaba): resta.
+        - Al pasar a 'cancelado' desde un estado que ya había descontado: regresa el inventario.
+        - Al pasar de un estado que descuenta a 'pendiente' (poco común, pero por seguridad): regresa.
+        """
+        ya_descontaba = estado_anterior in self.ESTADOS_QUE_DESCUENTAN
+        debe_descontar = estado_nuevo in self.ESTADOS_QUE_DESCUENTAN
+
+        if not ya_descontaba and debe_descontar:
+            for detalle in self.detalles.all():
+                detalle.producto.existencias -= detalle.cantidad
+                detalle.producto.save(update_fields=['existencias'])
+
+        elif ya_descontaba and not debe_descontar:
+            for detalle in self.detalles.all():
+                detalle.producto.existencias += detalle.cantidad
+                detalle.producto.save(update_fields=['existencias'])
 
 class DetallePedido(models.Model):
     """Líneas de producto dentro de un pedido (tabla detalle_pedido)."""

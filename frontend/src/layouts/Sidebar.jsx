@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, Users, UserCog } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, ClipboardList, Users, UserCog, LogOut } from 'lucide-react';
 import './Sidebar.css';
 
 const menuItems = [
@@ -11,6 +11,15 @@ const menuItems = [
 ];
 
 function Sidebar() {
+  const navigate = useNavigate();
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    navigate('/login');
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">Casa de Materiales</div>
@@ -27,6 +36,14 @@ function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="sidebar-footer">
+        {usuario && <div className="sidebar-usuario">{usuario.nombre}</div>}
+        <button className="sidebar-logout" onClick={handleLogout}>
+          <LogOut size={18} />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
     </aside>
   );
 }

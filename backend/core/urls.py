@@ -6,6 +6,7 @@ from .views import (
     PedidoViewSet, DetallePedidoViewSet,
     DashboardResumenView, VentasUltimosSieteDiasView,
     ProductosMasVendidosView, ProductosRecientesView, InventarioPorAtenderView,
+    LoginView,
 )
 
 router = DefaultRouter()
@@ -23,4 +24,5 @@ urlpatterns = [
     path('dashboard/productos-mas-vendidos/', ProductosMasVendidosView.as_view(), name='dashboard-mas-vendidos'),
     path('dashboard/productos-recientes/', ProductosRecientesView.as_view(), name='dashboard-recientes'),
     path('dashboard/inventario-bajo/', InventarioPorAtenderView.as_view(), name='dashboard-inventario-bajo'),
+    path('login/', LoginView.as_view(), name='login'),
 ]

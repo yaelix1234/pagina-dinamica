@@ -43,3 +43,14 @@
   background-color: #2563eb;
   color: #ffffff;
 }
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
