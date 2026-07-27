@@ -15,7 +15,7 @@ function Login() {
     setCargando(true);
 
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/login/', { correo, password });
+      const res = await axios.post('https://casa-materiales-backend.onrender.com/api/login/', { correo, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('usuario', JSON.stringify(res.data.usuario));
       navigate('/');
