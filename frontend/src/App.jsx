@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Productos from './pages/Productos';
+import Categorias from './pages/Categorias';
 import Pedidos from './pages/Pedidos';
 import Clientes from './pages/Clientes';
 import Usuarios from './pages/Usuarios';
@@ -22,6 +23,7 @@ function App() {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/productos" element={<Productos />} />
+          <Route path="/categorias" element={<Categorias />} />
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/usuarios" element={<Usuarios />} />

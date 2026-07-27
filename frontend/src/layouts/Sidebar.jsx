@@ -1,10 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, Users, UserCog, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, ClipboardList, Users, UserCog, LogOut } from 'lucide-react';
 import './Sidebar.css';
 
 const menuItems = [
   { to: '/', label: 'Resumen', icon: LayoutDashboard },
   { to: '/productos', label: 'Productos', icon: Package },
+  { to: '/categorias', label: 'Categorías', icon: Tag },
   { to: '/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/clientes', label: 'Clientes', icon: Users },
   { to: '/usuarios', label: 'Usuarios', icon: UserCog },
