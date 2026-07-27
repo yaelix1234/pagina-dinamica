@@ -10,7 +10,7 @@ const menuItems = [
   { to: '/usuarios', label: 'Usuarios', icon: UserCog },
 ];
 
-function Sidebar() {
+function Sidebar({ abierto, onCerrar }) {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
@@ -21,7 +21,7 @@ function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${abierto ? 'sidebar-abierto' : ''}`}>
       <div className="sidebar-logo">Casa de Materiales</div>
       <nav className="sidebar-nav">
         {menuItems.map(({ to, label, icon: Icon }) => (
@@ -30,6 +30,7 @@ function Sidebar() {
             to={to}
             end={to === '/'}
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onCerrar}
           >
             <Icon size={20} />
             <span>{label}</span>
